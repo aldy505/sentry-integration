@@ -27,6 +27,12 @@ func WithTags(tags map[string]string) SentryRoundTripTracerOption {
 	}
 }
 
+func WithTag(key, value string) SentryRoundTripTracerOption {
+	return func(t *SentryRoundTripper) {
+		t.tags[key] = value
+	}
+}
+
 func NewSentryRoundTripper(originalRoundTripper http.RoundTripper, tracePropagationTargets []string, opts ...SentryRoundTripTracerOption) http.RoundTripper {
 	if originalRoundTripper == nil {
 		originalRoundTripper = http.DefaultTransport

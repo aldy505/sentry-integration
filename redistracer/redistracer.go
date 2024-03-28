@@ -25,6 +25,12 @@ func WithTags(tags map[string]string) SentryRedisTracerOption {
 	}
 }
 
+func WithTag(key, value string) SentryRedisTracerOption {
+	return func(t *SentryRedisTracer) {
+		t.tags[key] = value
+	}
+}
+
 func NewSentryRedisTracer(opts ...SentryRedisTracerOption) redis.Hook {
 	t := &SentryRedisTracer{}
 

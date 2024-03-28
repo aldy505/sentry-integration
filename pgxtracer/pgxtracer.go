@@ -40,6 +40,12 @@ func WithTags(tags map[string]string) SentryPgxTracerOption {
 	}
 }
 
+func WithTag(key, value string) SentryPgxTracerOption {
+	return func(t *Tracer) {
+		t.tags[key] = value
+	}
+}
+
 func NewSentryPgxTracer(opts ...SentryPgxTracerOption) pgx.QueryTracer {
 	t := &Tracer{
 		tags: make(map[string]string),
