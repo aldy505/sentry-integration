@@ -15,13 +15,31 @@ import (
 	redis "github.com/redis/go-redis/v9"
 )
 
-func NewSentryRedisTracer() redis.Hook {
-	return &SentryRedisTracer{}
+type SentryRedisTracerOption func(*SentryRedisTracer)
+
+func WithTags(tags map[string]string) SentryRedisTracerOption {
+	return func(t *SentryRedisTracer) {
+		for k, v := range tags {
+			t.tags[k] = v
+		}
+	}
+}
+
+func NewSentryRedisTracer(opts ...SentryRedisTracerOption) redis.Hook {
+	t := &SentryRedisTracer{}
+
+	for _, opt := range opts {
+		opt(t)
+	}
+
+	return t
 }
 
 type SentryRedisTracer struct {
 	network string
 	addr    string
+
+	tags map[string]string
 }
 
 // DialHook implements redis.Hook.
@@ -43,6 +61,11 @@ func (s *SentryRedisTracer) ProcessHook(next redis.ProcessHook) redis.ProcessHoo
 		span.SetData("db.system", "redis")
 		span.SetData("db.operation", cmd.FullName())
 		span.SetData("server.address", s.addr)
+
+		for k, v := range s.tags {
+			span.SetTag(k, v)
+		}
+
 		defer span.Finish()
 
 		err := next(ctx, cmd)

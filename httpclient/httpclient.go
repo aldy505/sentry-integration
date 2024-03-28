@@ -17,20 +17,39 @@ import (
 	"github.com/getsentry/sentry-go"
 )
 
-func NewSentryRoundTripper(originalRoundTripper http.RoundTripper, tracePropagationTargets []string) http.RoundTripper {
+type SentryRoundTripTracerOption func(*SentryRoundTripper)
+
+func WithTags(tags map[string]string) SentryRoundTripTracerOption {
+	return func(t *SentryRoundTripper) {
+		for k, v := range tags {
+			t.tags[k] = v
+		}
+	}
+}
+
+func NewSentryRoundTripper(originalRoundTripper http.RoundTripper, tracePropagationTargets []string, opts ...SentryRoundTripTracerOption) http.RoundTripper {
 	if originalRoundTripper == nil {
 		originalRoundTripper = http.DefaultTransport
 	}
 
-	return &SentryRoundTripper{
+	t := &SentryRoundTripper{
 		originalRoundTripper:    originalRoundTripper,
 		tracePropagationTargets: tracePropagationTargets,
+		tags:                    make(map[string]string),
 	}
+
+	for _, opt := range opts {
+		opt(t)
+	}
+
+	return t
 }
 
 type SentryRoundTripper struct {
 	originalRoundTripper    http.RoundTripper
 	tracePropagationTargets []string
+
+	tags map[string]string
 }
 
 func (s *SentryRoundTripper) RoundTrip(request *http.Request) (*http.Response, error) {
@@ -51,6 +70,11 @@ func (s *SentryRoundTripper) RoundTrip(request *http.Request) (*http.Response, e
 	cleanRequestURL := request.URL.Path
 
 	span := sentry.StartSpan(ctx, "http.client", sentry.WithTransactionName(fmt.Sprintf("%s %s", request.Method, cleanRequestURL)))
+
+	for k, v := range s.tags {
+		span.SetTag(k, v)
+	}
+
 	defer span.Finish()
 
 	span.SetData("http.query", request.URL.Query().Encode())
