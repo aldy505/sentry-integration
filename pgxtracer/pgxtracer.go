@@ -30,11 +30,37 @@ import (
 	"github.com/jackc/pgx/v5"
 )
 
-func NewSentryPgxTracer() pgx.QueryTracer {
-	return &Tracer{}
+type SentryPgxTracerOption func(*Tracer)
+
+func WithTags(tags map[string]string) SentryPgxTracerOption {
+	return func(t *Tracer) {
+		for k, v := range tags {
+			t.tags[k] = v
+		}
+	}
 }
 
-type Tracer struct{}
+func WithTag(key, value string) SentryPgxTracerOption {
+	return func(t *Tracer) {
+		t.tags[key] = value
+	}
+}
+
+func NewSentryPgxTracer(opts ...SentryPgxTracerOption) pgx.QueryTracer {
+	t := &Tracer{
+		tags: make(map[string]string),
+	}
+
+	for _, opt := range opts {
+		opt(t)
+	}
+
+	return t
+}
+
+type Tracer struct {
+	tags map[string]string
+}
 
 func (t Tracer) TraceQueryStart(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
 	span := sentry.StartSpan(ctx, "db.sql.query", sentry.WithTransactionName(data.SQL), sentry.WithDescription(data.SQL))
@@ -50,6 +76,10 @@ func (t Tracer) TraceQueryEnd(ctx context.Context, conn *pgx.Conn, data pgx.Trac
 	span := sentry.SpanFromContext(ctx)
 	if span == nil {
 		return
+	}
+
+	for k, v := range t.tags {
+		span.SetTag(k, v)
 	}
 
 	if data.CommandTag.Insert() {
