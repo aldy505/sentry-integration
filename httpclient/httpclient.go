@@ -59,6 +59,14 @@ type SentryRoundTripper struct {
 }
 
 func (s *SentryRoundTripper) RoundTrip(request *http.Request) (*http.Response, error) {
+	// Start Sentry trace
+	ctx := request.Context()
+	parentSpan := sentry.SpanFromContext(ctx)
+	if parentSpan == nil {
+		return s.originalRoundTripper.RoundTrip(request)
+	}
+	ctx = parentSpan.Context()
+
 	// Respect trace propagation targets
 	if len(s.tracePropagationTargets) > 0 {
 		requestUrlString := request.URL.String()
@@ -71,16 +79,10 @@ func (s *SentryRoundTripper) RoundTrip(request *http.Request) (*http.Response, e
 		}
 	}
 
-	// Start Sentry trace
-	ctx := request.Context()
 	cleanRequestURL := request.URL.Path
 
 	span := sentry.StartSpan(ctx, "http.client", sentry.WithTransactionName(fmt.Sprintf("%s %s", request.Method, cleanRequestURL)))
-
-	for k, v := range s.tags {
-		span.SetTag(k, v)
-	}
-
+	span.Tags = s.tags
 	defer span.Finish()
 
 	span.SetData("http.query", request.URL.Query().Encode())

@@ -46,6 +46,19 @@ func WithTag(key, value string) SentryPgxTracerOption {
 	}
 }
 
+func WithDatabaseName(databaseName string) SentryPgxTracerOption {
+	return func(t *Tracer) {
+		t.databaseName = databaseName
+	}
+}
+
+func WithServerAddress(hostname string, port string) SentryPgxTracerOption {
+	return func(t *Tracer) {
+		t.serverAddress = hostname
+		t.serverPort = port
+	}
+}
+
 func NewSentryPgxTracer(opts ...SentryPgxTracerOption) pgx.QueryTracer {
 	t := &Tracer{
 		tags: make(map[string]string),
@@ -59,15 +72,33 @@ func NewSentryPgxTracer(opts ...SentryPgxTracerOption) pgx.QueryTracer {
 }
 
 type Tracer struct {
-	tags map[string]string
+	tags          map[string]string
+	databaseName  string
+	serverAddress string
+	serverPort    string
 }
 
 func (t Tracer) TraceQueryStart(ctx context.Context, conn *pgx.Conn, data pgx.TraceQueryStartData) context.Context {
+	parentSpan := sentry.SpanFromContext(ctx)
+	if parentSpan == nil {
+		return ctx
+	}
+	ctx = parentSpan.Context()
+
 	span := sentry.StartSpan(ctx, "db.sql.query", sentry.WithTransactionName(data.SQL), sentry.WithDescription(data.SQL))
 	if span == nil {
 		return ctx
 	}
 	span.SetData("db.system", "postgresql")
+	if t.serverAddress != "" {
+		span.SetData("server.address", t.serverAddress)
+	}
+	if t.serverPort != "" {
+		span.SetData("server.port", t.serverPort)
+	}
+	if t.databaseName != "" {
+		span.SetData("db.name", t.databaseName)
+	}
 
 	return span.Context()
 }
