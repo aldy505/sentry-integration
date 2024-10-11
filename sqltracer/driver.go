@@ -5,18 +5,18 @@ import (
 	"database/sql/driver"
 )
 
-type DriverConnector interface {
-	driver.Driver
-	driver.DriverContext
-}
-
 type sentrySqlDriver struct {
-	originalDriver DriverConnector
+	originalDriver driver.Driver
 	config         *sentrySqlConfig
 }
 
 func (s *sentrySqlDriver) OpenConnector(name string) (driver.Connector, error) {
-	connector, err := s.originalDriver.OpenConnector(name)
+	driverContext, ok := s.originalDriver.(driver.DriverContext)
+	if !ok {
+		return nil, driver.ErrSkip
+	}
+
+	connector, err := driverContext.OpenConnector(name)
 	if err != nil {
 		return nil, err
 	}

@@ -18,6 +18,8 @@
 //	}
 package sqltracer
 
+import "database/sql/driver"
+
 type sentrySqlConfig struct {
 	databaseSystem string
 	databaseName   string
@@ -25,11 +27,20 @@ type sentrySqlConfig struct {
 	serverPort     string
 }
 
-func NewSentrySql(driver DriverConnector, options ...SentrySqlTracerOption) DriverConnector {
+func NewSentrySql(driver driver.Driver, options ...SentrySqlTracerOption) driver.Driver {
 	var config sentrySqlConfig
 	for _, option := range options {
 		option(&config)
 	}
 
 	return &sentrySqlDriver{originalDriver: driver, config: &config}
+}
+
+func NewSentrySqlConnector(connector driver.Connector, options ...SentrySqlTracerOption) driver.Connector {
+	var config sentrySqlConfig
+	for _, option := range options {
+		option(&config)
+	}
+
+	return &sentrySqlConnector{originalConnector: connector, config: &config}
 }
