@@ -87,7 +87,7 @@ func newTracingHook(connString string, opts ...TracingOption) *tracingHook {
 
 func (th *tracingHook) DialHook(hook redis.DialHook) redis.DialHook {
 	return func(ctx context.Context, network, addr string) (net.Conn, error) {
-		span := sentry.StartSpan(ctx, "redis.dial", sentry.WithSpanOrigin("auto.db.redis"))
+		span := sentry.StartSpan(ctx, "redis.dial")
 		ctx = span.Context()
 		span.Data = th.conf.spanData
 		defer span.Finish()
@@ -144,7 +144,7 @@ func (th *tracingHook) ProcessHook(hook redis.ProcessHook) redis.ProcessHook {
 			spanOperation = "db.redis"
 		}
 
-		span := sentry.StartSpan(ctx, spanOperation, sentry.WithSpanOrigin("auto.db.redis"), sentry.WithTransactionName(cmd.FullName()))
+		span := parentSpan.StartChild(spanOperation, sentry.WithDescription(cmd.FullName()))
 		ctx = span.Context()
 		span.Data = spanData
 		defer span.Finish()
@@ -194,7 +194,7 @@ func (th *tracingHook) ProcessPipelineHook(hook redis.ProcessPipelineHook) redis
 			spanData["db.statement"] = cmdsString
 		}
 
-		span := sentry.StartSpan(ctx, "redis.pipeline "+summary, sentry.WithSpanOrigin("auto.db.redis"), sentry.WithTransactionName(cmds[0].FullName()))
+		span := parentSpan.StartChild("redis.pipeline "+summary, sentry.WithDescription(cmds[0].FullName()))
 		ctx = span.Context()
 		span.Data = th.conf.spanData
 		defer span.Finish()

@@ -88,7 +88,7 @@ func (s *sentryConn) Query(query string, args []driver.Value) (driver.Rows, erro
 		return queryer.Query(query, args)
 	}
 
-	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(query), sentry.WithTransactionName(query))
+	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(query))
 	if s.config.databaseSystem != "" {
 		span.SetData("db.system", s.config.databaseSystem)
 	}
@@ -125,7 +125,7 @@ func (s *sentryConn) QueryContext(ctx context.Context, query string, args []driv
 		return queryerContext.QueryContext(ctx, query, args)
 	}
 
-	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(query), sentry.WithTransactionName(query))
+	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(query))
 	if s.config.databaseSystem != "" {
 		span.SetData("db.system", s.config.databaseSystem)
 	}
@@ -162,7 +162,7 @@ func (s *sentryConn) Exec(query string, args []driver.Value) (driver.Result, err
 		return execer.Exec(query, args)
 	}
 
-	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(query), sentry.WithTransactionName(query))
+	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(query))
 	if s.config.databaseSystem != "" {
 		span.SetData("db.system", s.config.databaseSystem)
 	}
@@ -199,7 +199,7 @@ func (s *sentryConn) ExecContext(ctx context.Context, query string, args []drive
 		return execerContext.ExecContext(ctx, query, args)
 	}
 
-	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(query), sentry.WithTransactionName(query))
+	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(query))
 	if s.config.databaseSystem != "" {
 		span.SetData("db.system", s.config.databaseSystem)
 	}

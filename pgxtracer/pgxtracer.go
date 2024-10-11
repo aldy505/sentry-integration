@@ -85,7 +85,7 @@ func (t Tracer) TraceQueryStart(ctx context.Context, conn *pgx.Conn, data pgx.Tr
 	}
 	ctx = parentSpan.Context()
 
-	span := sentry.StartSpan(ctx, "db.sql.query", sentry.WithTransactionName(data.SQL), sentry.WithDescription(data.SQL))
+	span := sentry.StartSpan(ctx, "db.sql.query", sentry.WithDescription(data.SQL))
 	if span == nil {
 		return ctx
 	}

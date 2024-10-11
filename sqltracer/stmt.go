@@ -28,7 +28,7 @@ func (s *sentryStmt) Exec(args []driver.Value) (driver.Result, error) {
 		return s.originalStmt.Exec(args)
 	}
 
-	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(s.query), sentry.WithTransactionName(s.query))
+	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(s.query))
 	if s.config.databaseSystem != "" {
 		span.SetData("db.system", s.config.databaseSystem)
 	}
@@ -61,7 +61,7 @@ func (s *sentryStmt) Query(args []driver.Value) (driver.Rows, error) {
 		return s.originalStmt.Query(args)
 	}
 
-	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(s.query), sentry.WithTransactionName(s.query))
+	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(s.query))
 	if s.config.databaseSystem != "" {
 		span.SetData("db.system", s.config.databaseSystem)
 	}
@@ -106,7 +106,7 @@ func (s *sentryStmt) ExecContext(ctx context.Context, args []driver.NamedValue) 
 		return stmtExecContext.ExecContext(ctx, args)
 	}
 
-	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(s.query), sentry.WithTransactionName(s.query))
+	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(s.query))
 	if s.config.databaseSystem != "" {
 		span.SetData("db.system", s.config.databaseSystem)
 	}
@@ -150,7 +150,7 @@ func (s *sentryStmt) QueryContext(ctx context.Context, args []driver.NamedValue)
 		return stmtQueryContext.QueryContext(ctx, args)
 	}
 
-	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(s.query), sentry.WithTransactionName(s.query))
+	span := parentSpan.StartChild("db.sql.query", sentry.WithDescription(s.query))
 	if s.config.databaseSystem != "" {
 		span.SetData("db.system", s.config.databaseSystem)
 	}
