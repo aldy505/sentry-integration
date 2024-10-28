@@ -1,20 +1,24 @@
 package sqltracer
 
-type SentrySqlTracerOption func(*sentrySqlConfig)
+type Option func(*sentrySQLConfig)
 
-func WithDatabaseSystem(system string) SentrySqlTracerOption {
-	return func(config *sentrySqlConfig) {
+// WithDatabaseSystem specifies the current database system.
+func WithDatabaseSystem(system DatabaseSystem) Option {
+	return func(config *sentrySQLConfig) {
 		config.databaseSystem = system
 	}
 }
-func WithDatabaseName(name string) SentrySqlTracerOption {
-	return func(config *sentrySqlConfig) {
+
+// WithDatabaseName specifies the name of the current database.
+func WithDatabaseName(name string) Option {
+	return func(config *sentrySQLConfig) {
 		config.databaseName = name
 	}
 }
 
-func WithServerAddress(address string, port string) SentrySqlTracerOption {
-	return func(config *sentrySqlConfig) {
+// WithServerAddress specifies the address and port of the current database server.
+func WithServerAddress(address string, port string) Option {
+	return func(config *sentrySQLConfig) {
 		config.serverAddress = address
 		config.serverPort = port
 	}
