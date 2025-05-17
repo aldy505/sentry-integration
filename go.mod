@@ -3,7 +3,7 @@ module github.com/aldy505/sentry-integration
 go 1.23
 
 require (
-	github.com/getsentry/sentry-go v0.29.0
+	github.com/getsentry/sentry-go v0.33.0
 	github.com/jackc/pgx/v5 v5.7.1
 	github.com/redis/go-redis/extra/rediscmd/v9 v9.5.3
 	github.com/redis/go-redis/v9 v9.6.1
